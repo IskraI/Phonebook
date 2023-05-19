@@ -35,8 +35,10 @@
 }
 
 .add__button {
+  display: block;
   font-size: 20px;
   margin-top: 16px;
+  margin-left: auto;
 
   transition: all cubic-bezier(0.25s, 0.7, 0.98, 0.86) 0s;
   cursor: pointer;
