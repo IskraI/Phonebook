@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import ContactForm from 'components/ContactForm/ContactForm';
 import ContactList from 'components/ContactList/ContactList';
 import Filter from 'components/Filter/Filter';
@@ -12,30 +12,24 @@ import css from './App.module.css';
 //   { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
 // ];
 
-class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
-  componentDidMount() {
-    const localContacts = localStorage.getItem('contacts');
-    if (localContacts) {
-      this.setState({ contacts: JSON.parse(localContacts) });
-    }
-  }
+const useLocalStorage = (key, defaultValue) => {
+  const [state, setState] = useState(() => {
+    return JSON.parse(window.localStorage.getItem(key)) ?? defaultValue;
+  });
+  return [state, setState];
+};
 
-  componentDidUpdate(prevProps, prevState) {
-    // console.log('this.state.contacts', this.state.contacts);
-    // console.log(' prevState.contacts', prevState.contacts);
-    // console.log(this.state.contacts.length === prevState.contacts.length);
+const App = () => {
+  const [contacts, setContacts] = useLocalStorage('contacts', []);
+  const [filter, setFilter] = useState('');
 
-    if (this.state.contacts.length !== prevState.contacts.length) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
-  }
-  formSubmitHandler = values => {
+  useEffect(
+    () => window.localStorage.setItem('contacts', JSON.stringify(contacts)),
+    [contacts]
+  );
+
+  const formSubmitHandler = values => {
     const { name, number } = values;
-    const { contacts } = this.state;
 
     if (
       contacts.some(
@@ -51,56 +45,53 @@ class App extends Component {
         `Contact with number ${existNumber.number} is already in  ${existNumber.name}`
       );
     }
-    this.addNewContact(name, number);
+    addNewContact(name, number);
   };
 
-  addNewContact = (name, number) => {
+  const addNewContact = (name, number) => {
     const contact = {
       id: nanoid(),
       name,
       number,
     };
 
-    this.setState(prevState => {
-      return { contacts: [contact, ...prevState.contacts] };
+    setContacts(prevS => {
+      return [contact, ...prevS];
     });
   };
-  deleteContact = contactId => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== contactId),
-    }));
+
+  const deleteContact = contactId => {
+    return setContacts(prevS =>
+      prevS.filter(contact => contact.id !== contactId)
+    );
   };
 
-  changeFilter = event => {
-    this.setState({ filter: event.currentTarget.value });
+  const changeFilter = event => {
+    setFilter(event.currentTarget.value);
   };
-  getVisibleContacts = () => {
-    const { contacts, filter } = this.state;
 
+  const getVisibleContacts = () => {
     const normalizedFilter = filter.toLowerCase().trim();
     return contacts.filter(contact =>
       contact.name.toLowerCase().includes(normalizedFilter)
     );
   };
 
-  render() {
-    const { filter } = this.state;
-
-    return (
-      <div className={css.container}>
-        <h1 className={css.title}>Phonebook</h1>
-        <ContactForm onSubmit={this.formSubmitHandler} />
-        <h2 className={css.title__contacts}>Contacts</h2>
-        <Filter value={filter} onChange={this.changeFilter} />
-        {this.state.contacts.length > 0 && (
-          <ContactList
-            contacts={this.getVisibleContacts()}
-            onDeleteContact={this.deleteContact}
-          />
-        )}
-      </div>
-    );
-  }
-}
-
+  return (
+    <div className={css.container}>
+      <h1 className={css.title}>Phonebook</h1>
+      <ContactForm onSubmit={formSubmitHandler} />
+      <h2 className={css.title__contacts}>Contacts</h2>
+      <Filter value={filter} onChange={changeFilter} />
+      {contacts.length > 0 && (
+        <ContactList
+          contacts={getVisibleContacts()}
+          onDeleteContact={deleteContact}
+        />
+      )}
+    </div>
+  );
+};
 export default App;
+
+

@@ -1,73 +1,79 @@
-import React from 'react';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as yup from 'yup';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import css from './ContactForm.module.css';
 
-const initialValues = { name: '', number: '' };
+const ContactForm = props => {
+  const [name, setName] = useState('');
+  const [number, setNumber] = useState('');
 
-const validationSchema = yup.object().shape({
-  name: yup
-    .string()
-    .required('Name is required')
-    .matches(
-      /^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$/,
-      'Name may contain only letters, apostrophe, dash and spaces.'
-    ),
-  number: yup
-    .string()
-    .required('Number is required')
-    .matches(
-      /^\+?\d{1,4}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/,
-      'Phone number must be digits and can contain spaces, dashes, parentheses and can start with "+".'
-    ),
-});
-const FormError = ({ name }) => {
-  return (
-    <ErrorMessage
-      name={name}
-      render={message => <p className={css.error__message}>{message}</p>}
-    />
-  );
-};
+  const handleChange = event => {
+    // console.log(event.target.value);
+    const { name, value } = event.target;
 
-const ContactForm = ({ onSubmit }) => {
-  const handleSubmit = (values, { resetForm }) => {
-    onSubmit(values);
-    resetForm();
+    switch (name) {
+      case 'name':
+        setName(value);
+        break;
+
+      case 'number':
+        setNumber(value);
+        break;
+
+      default:
+        return;
+    }
+  };
+
+  const handleSubmit = event => {
+    event.preventDefault();
+    const dataForm = { name, number };
+    props.onSubmit(dataForm);
+    reset();
+  };
+
+  const reset = () => {
+    setName('');
+    setNumber('');
   };
 
   return (
-    <Formik
-      initialValues={initialValues}
-      validationSchema={validationSchema}
-      onSubmit={handleSubmit}
-    >
-      <Form className={css.form} autoComplete="off">
-        <label className={css.label} htmlFor="name">
-          <span className={css.input__name}>Name</span>
-          <div className={css.field}>
-            <Field className={css.input__data} type="text" name="name" />
-            <FormError name="name" />
-          </div>
-        </label>
-        <label className={css.label} htmlFor="number">
-          <span className={css.input__name}>Phone</span>
+    <form className={css.form} onSubmit={handleSubmit} autoComplete="off">
+      <label className={css.label}>
+        <span className={css.input__name}>Name</span>
+        <input
+          className={css.input__data}
+          type="text"
+          name="name"
+          pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
+          title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
+          required
+          value={name}
+          onChange={handleChange}
+        />
+      </label>
+      <label className={css.label}>
+        <span className={css.input__name}> Phone</span>
+        <input
+          className={css.input__data}
+          type="tel"
+          name="number"
+          pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
+          title="Phone number must be min 5 digits and can contain spaces, dashes, parentheses and can start with +"
+          required
+          value={number}
+          onChange={handleChange}
+        />
+      </label>
 
-          <div className={css.field}>
-            <Field className={css.input__data} type="tel" name="number" />
-            <FormError name="number" />
-          </div>
-        </label>
-
-        <button className={css.add__button} type="submit">
-          Add contact
-        </button>
-      </Form>
-    </Formik>
+      <button className={css.add__button} type="submit">
+        Add contact
+      </button>
+    </form>
   );
 };
+
 ContactForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
 };
+
 export default ContactForm;
